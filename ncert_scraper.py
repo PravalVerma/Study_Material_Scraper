@@ -180,18 +180,24 @@ class NcertScraper(BaseScraper):
                 # Build the ZIP URL
                 zip_url = f"https://ncert.nic.in/textbook/pdf/{book_code}dd.zip"
                 
-                # Target folder: NCERT/Class X/Subject/Book Title/
-                dest_dir = os.path.join(self.output_dir, class_name, clean_subject, clean_title)
+                # Target folder: NCERT/Class X/Subject/
+                dest_dir = os.path.join(self.output_dir, class_name, clean_subject)
                 os.makedirs(dest_dir, exist_ok=True)
                 
-                zip_dest = os.path.join(dest_dir, f"{book_code}.zip")
+                # Temporary directory for zip extraction
+                extract_dir = os.path.join(dest_dir, f"temp_{clean_title}")
+                os.makedirs(extract_dir, exist_ok=True)
+                
+                zip_dest = os.path.join(extract_dir, f"{book_code}.zip")
                 
                 self.tasks.append({
                     "name": f"{class_name} - {subject} - {title}",
                     "url": zip_url,
                     "destination": zip_dest,
-                    "extract_dir": dest_dir,
-                    "type": "ncert_zip"
+                    "extract_dir": extract_dir,
+                    "final_dir": dest_dir,
+                    "type": "ncert_zip",
+                    "book_title": clean_title
                 })
                     
         logger.info(f"NcertScraper found {len(self.tasks)} books (English & Hindi only).")

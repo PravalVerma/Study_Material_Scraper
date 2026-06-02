@@ -123,10 +123,14 @@ class Downloader:
                 return False
 
         if task.get('type') == 'ncert_zip':
-            # Skip if directory has pdfs already
             extract_dir = task['extract_dir']
-            if os.path.exists(extract_dir) and any(f.endswith('.pdf') for f in os.listdir(extract_dir)):
-                logger.info(f"Skipping {name}, extracted PDFs already exist.")
+            final_dir = task.get('final_dir', extract_dir)
+            book_title = task.get('book_title', name)
+            final_pdf_path = os.path.join(final_dir, f"{book_title}.pdf")
+            
+            # Skip if merged PDF already exists
+            if os.path.exists(final_pdf_path) and os.path.getsize(final_pdf_path) > 1024:
+                logger.info(f"Skipping {name}, merged PDF already exists.")
                 return True
                 
             logger.info(f"Downloading NCERT Zip {name}...")
@@ -140,11 +144,63 @@ class Downloader:
                     with zipfile.ZipFile(destination, 'r') as zip_ref:
                         zip_ref.extractall(extract_dir)
                     os.remove(destination) # clean up zip
-                    logger.info(f"[SUCCESS] Downloaded & Extracted: {name}")
+                    
+                    # Merge extracted PDFs
+                    try:
+                        import fitz  # PyMuPDF
+                        pdf_files = [f for f in os.listdir(extract_dir) if f.lower().endswith('.pdf')]
+                        if pdf_files:
+                            # Natural sort the files to ensure chapter 10 comes after chapter 9
+                            import re
+                            def natural_sort_key(s):
+                                return [int(text) if text.isdigit() else text.lower() for text in re.split(r'(\d+)', s)]
+                            
+                            pdf_files.sort(key=natural_sort_key)
+                            
+                            merged_pdf = fitz.open()
+                            for pdf_file in pdf_files:
+                                pdf_path = os.path.join(extract_dir, pdf_file)
+                                try:
+                                    doc = fitz.open(pdf_path)
+                                    merged_pdf.insert_pdf(doc)
+                                    doc.close()
+                                except Exception as e:
+                                    logger.error(f"Error reading {pdf_path} for merging: {e}")
+                                    
+                            book_title = task.get('book_title', name)
+                            temp_pdf_path = os.path.join(extract_dir, f"temp_merged_{book_title}.pdf")
+                            merged_pdf.save(temp_pdf_path)
+                            merged_pdf.close()
+                            
+                            # Clean up individual chapter PDFs
+                            for pdf_file in pdf_files:
+                                os.remove(os.path.join(extract_dir, pdf_file))
+                                
+                            # Rename temp to final name
+                            if os.path.exists(final_pdf_path):
+                                os.remove(final_pdf_path) # remove if exists from a previous failed run
+                            os.rename(temp_pdf_path, final_pdf_path)
+                                
+                            # Remove the temporary extraction directory
+                            try:
+                                os.rmdir(extract_dir)
+                            except OSError as e:
+                                logger.warning(f"Could not remove temp dir {extract_dir}: {e}")
+                                
+                            logger.info(f"[SUCCESS] Downloaded, Extracted & Merged: {name}")
+                        else:
+                            logger.info(f"[SUCCESS] Downloaded & Extracted (No PDFs found to merge): {name}")
+                    except ImportError:
+                        logger.warning(f"PyMuPDF (fitz) not installed. Skipping merge for {name}.")
+                        logger.info(f"[SUCCESS] Downloaded & Extracted: {name}")
+                    except Exception as e:
+                        logger.error(f"[ERROR] Failed to merge PDFs for {name}: {e}")
+                        
                     return True
                 except Exception as e:
                     logger.error(f"[ERROR] Failed to extract zip {name}: {e}")
-                    os.remove(destination)
+                    if os.path.exists(destination):
+                        os.remove(destination)
                     return False
             else:
                 logger.error(f"[ERROR] Failed download: {name}")
