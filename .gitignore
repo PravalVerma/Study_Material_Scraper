@@ -1,0 +1,22 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large downloaded files/folders
+NCERT/
+PYQs/
+PYQs - JEE Main & NEET/
+*.pdf
+*.zip
+
+# Scraping data and logs
+ncert_html.txt
+textbooks_list.txt
+results.json
+download_report.json
+logs/
+
+# IDE files
+.vscode/
+.idea/
