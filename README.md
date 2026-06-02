@@ -1,6 +1,6 @@
 # PYQ and NCERT Scraper
 
-A Production-Grade Python Agent to automatically scrape and download Previous Year Question Papers (PYQs) for JEE Main and NEET, as well as official NCERT Textbooks for Classes I-XII.
+A Python Agent to automatically scrape and download Previous Year Question Papers (PYQs) for JEE Main and NEET, as well as official NCERT Textbooks for Classes I-XII.
 
 ## Features
 - **Concurrent Downloading**: Uses `ThreadPoolExecutor` for fast downloads.
