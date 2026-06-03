@@ -6,6 +6,7 @@ A Python Agent to automatically scrape and download Previous Year Question Paper
 - **Concurrent Downloading**: Uses `ThreadPoolExecutor` for fast downloads.
 - **Proxy Rotation**: Built-in support to rotate proxies to bypass rate limits.
 - **Google Drive Integration**: Custom logic to bypass Google Drive's "Large File" warning and download PDFs directly.
+- **Automated PDF Merging**: Automatically extracts NCERT zip files, merges chapters in numerical order into a single textbook PDF, and cleans up temporary files.
 - **Resiliency**: Exponential backoff retries, duplicate detection, and content validation.
 - **Reporting**: Generates a detailed JSON report upon completion.
 
@@ -23,10 +24,10 @@ PYQs/
 NCERT/
 ├── Class 1/
 │   ├── English/
-│   │   ├── Mridang/
-│   │   │   ├── Chapter 1.pdf
-│   │   │   └── ...
+│   │   ├── Marigold.pdf
+│   │   └── Raindrops.pdf
 │   └── Mathematics/
+│       └── Math Magic.pdf
 └── ...
 ```
 
